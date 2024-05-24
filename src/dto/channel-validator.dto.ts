@@ -1,6 +1,6 @@
 import {IsString} from "class-validator";
 
-export class CreateChannelValidatorDto {
+export class ChannelValidatorDto {
     @IsString()
     channelLink : string;
 }

@@ -1,5 +1,6 @@
 import {Injectable} from '@nestjs/common';
 import {IConfigService} from "./config.interface";
+import {DotenvParseOutput, config} from "dotenv";
 
 @Injectable()
 export class ConfigService implements IConfigService{

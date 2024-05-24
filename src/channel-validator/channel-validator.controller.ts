@@ -1,6 +1,7 @@
 import {Body, Controller, Get, UsePipes, ValidationPipe} from '@nestjs/common';
-import {CreateChannelValidatorDto} from "../dto/create-channel-validator.dto";
+import {ChannelValidatorDto} from "../dto/channel-validator.dto";
 import {ChannelValidatorService} from "./channel-validator.service";
+import * as path from "path";
 
 @Controller('channel-validator')
 export class ChannelValidatorController {
@@ -8,8 +9,8 @@ export class ChannelValidatorController {
     }
     @UsePipes(new ValidationPipe())
     @Get()
-    async validateChannel(@Body() createChannelValidatorDto : CreateChannelValidatorDto) {
-        await this.channelValidatorService.get()
+    async validateChannel(@Body() channelValidatorDto : ChannelValidatorDto) {
+        await this.channelValidatorService.get(channelValidatorDto, path.join(__dirname, '..', 'channel-validator', 'channel-validator.worker.js'))
         return ({res : true})
     }
 }

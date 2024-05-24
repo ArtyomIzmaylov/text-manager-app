@@ -6,6 +6,8 @@ import {IChannelValidatorDto} from "./channel-validator.interface";
 
 (async () => {
     try {
+        console.log('start')
+
         await main()
     }
     catch (e) {
@@ -16,19 +18,20 @@ import {IChannelValidatorDto} from "./channel-validator.interface";
 })()
 
 async function main() {
+
     const configService = new ConfigService()
     const stringSession = new StringSession(configService.get('STRING_SESSION'))
     const client = new TelegramClient(stringSession, parseInt(configService.get('API_ID')),configService.get('API_HASH'), {});
     try {
         await client.connect()
         const channelValidatorDto = workerData.channelValidatorDto as IChannelValidatorDto
-        const result = await this.client.invoke(
+        const result = await client.invoke(
             new Api.channels.GetFullChannel({
                 channel: channelValidatorDto.channelLink
             })
         )
         const fullChat = (result.fullChat) as Api.TypeChatFull & { flags?: number }
-        const validationResult = fullChat.flags === parseInt(this.configService.get('CHANNEL_IDENTIFIER'))
+        const validationResult = fullChat.flags === parseInt(configService.get('CHANNEL_IDENTIFIER'))
         if (parentPort) {
             parentPort.postMessage(validationResult);
         }
