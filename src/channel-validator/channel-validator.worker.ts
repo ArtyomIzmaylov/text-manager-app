@@ -1,33 +1,46 @@
 import {StringSession} from "telegram/sessions";
 import {ConfigService} from "../config/config.service";
-import {TelegramClient} from "telegram";
-
+import {Api, TelegramClient} from "telegram";
+import { workerData, parentPort } from "worker_threads"
+import {IChannelValidatorDto} from "./channel-validator.interface";
 
 (async () => {
+    try {
+        console.log('start')
+
+        await main()
+    }
+    catch (e) {
+        console.log(e)
+        throw Error
+    }
+
+})()
+
+async function main() {
+
     const configService = new ConfigService()
     const stringSession = new StringSession(configService.get('STRING_SESSION'))
     const client = new TelegramClient(stringSession, parseInt(configService.get('API_ID')),configService.get('API_HASH'), {});
-    const channelValidator = new ChannelValidator(client, new ConfigService())
-    const requestData = workerData.requestData as IRequestValidateChannel
-
     try {
         await client.connect()
-        const validateResult = await channelValidator.validate(requestData.channelName)
-        const workerResult : IChannelValidatorWorkerResult = {
-            workerResult : validateResult ? 'Канал существует' : 'Канал не существует'
-        }
+        const channelValidatorDto = workerData.channelValidatorDto as IChannelValidatorDto
+        const result = await client.invoke(
+            new Api.channels.GetFullChannel({
+                channel: channelValidatorDto.channelLink
+            })
+        )
+        const fullChat = (result.fullChat) as Api.TypeChatFull & { flags?: number }
+        const validationResult = fullChat.flags === parseInt(configService.get('CHANNEL_IDENTIFIER'))
         if (parentPort) {
-            parentPort.postMessage(workerResult);
+            parentPort.postMessage(validationResult);
         }
     }
     catch (e) {
         console.log(e)
-        if (parentPort) {
-            parentPort.postMessage({ workerResult: e });
-        }
+        throw Error
     }
     finally {
         await client.disconnect()
     }
-
-})()
+}
